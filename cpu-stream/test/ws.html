@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket demo</title>
+    </head>
+    <body>
+        <canvas id="my-canvas" width="400px" height="400px" style="border: 1px solid blue;"></canvas>
+        <script>
+          const canvas = document.getElementById('my-canvas'); 
+          const ctx = canvas.getContext('2d');
+          const ip = '192.168.1.1' // enter the active IP
+          const port = '5001' // enter the active PORT
+          var addr = "ws://" + ip + ":" + port + "/";
+
+          function _arrayBufferToBase64( buffer ) {
+            var binary = '';
+            var bytes = new Uint8Array( buffer );
+            var len = bytes.byteLength;
+
+            for (var i = 0; i < len; i++) {
+              binary += String.fromCharCode( bytes[ i ] );
+            }
+            return binary;
+          }
+
+          function drawImageActualSize() {
+            canvas.width = this.naturalWidth;
+            canvas.height = this.naturalHeight;
+            ctx.drawImage(this, 0, 0);
+          }
+
+          myImg = new Image();
+          myImg.onload = drawImageActualSize;
+
+          var reader = new FileReader();
+          var ws = new WebSocket(addr);
+
+          ws.binaryType = 'arraybuffer';
+          ws.onopen = function() {
+            console.log('socket established');
+          }
+          ws.onmessage = function (event) {
+            var arrayBufferView = new Uint8Array( event.data );
+            var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+
+            reader.onload = function(e) {
+              myImg.src = 'data:image/jpg;base64,' + _arrayBufferToBase64(reader.result);
+            };
+            reader.readAsArrayBuffer(blob);
+          };
+        </script>
+    </body>
+</html>
